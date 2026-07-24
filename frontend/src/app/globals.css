@@ -1,0 +1,75 @@
+@import "tailwindcss";
+@plugin "daisyui" {
+  themes: false;
+}
+
+/* Autocari theme — values from super-prompt-fe.md design system (#1a56db primary) */
+@plugin "daisyui/theme" {
+  name: "autocari";
+  default: true;
+  prefersdark: false;
+  color-scheme: light;
+
+  --color-base-100: #ffffff;
+  --color-base-200: #f7f9fb;
+  --color-base-300: #eceef0;
+  --color-base-content: #191c1e;
+
+  --color-primary: #1a56db;
+  --color-primary-content: #ffffff;
+  --color-secondary: #e8f0fe;
+  --color-secondary-content: #1e429f;
+  --color-accent: #1e429f;
+  --color-accent-content: #ffffff;
+  --color-neutral: #191c1e;
+  --color-neutral-content: #ffffff;
+
+  --color-info: #47b5ff;
+  --color-info-content: #ffffff;
+  --color-success: #057a55;
+  --color-success-content: #ffffff;
+  --color-warning: #f59e0b;
+  --color-warning-content: #ffffff;
+  --color-error: #ef4444;
+  --color-error-content: #ffffff;
+
+  --radius-selector: 0.5rem;
+  --radius-field: 0.5rem;
+  --radius-box: 1rem;
+  --border: 1px;
+}
+
+@theme {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --color-brand: #1a56db;
+  --color-brand-dark: #1e429f;
+  --color-brand-light: #e8f0fe;
+}
+
+html {
+  font-family: var(--font-sans);
+  scroll-behavior: smooth;
+}
+
+/* Accessibility: honor OS "reduce motion" preference (skill checklist). */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Keyboard-only focus ring for custom (non-DaisyUI) interactive elements. */
+.focus-ring:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--color-base-100),
+    0 0 0 4px var(--color-primary);
+  border-radius: var(--radius-field);
+}

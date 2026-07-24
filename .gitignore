@@ -1,0 +1,11 @@
+# Claude Code project-local skills/config — not part of the app
+.claude/
+
+# Stitch design reference dump (screenshots + exported HTML) — not part of the app
+design/
+
+# OS / editor junk
+.DS_Store
+*.pem
+.vscode/
+.idea/
