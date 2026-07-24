@@ -51,7 +51,9 @@ COMING_SOON = [
 
 # Search keyword per available (sub)category id, used for the detail page.
 CATEGORY_SEARCH = {
-    "electronics": "gadget elektronik terbaik",
+    # "elektronik" alone invites home-appliance matches (fans, washing machines) on
+    # Google Shopping; "gadget teknologi" reliably stays within phones/wearables/audio/etc.
+    "electronics": "gadget teknologi terbaik",
     "smartphones": "smartphone terbaik Indonesia",
     "laptops": "laptop terbaik Indonesia",
     "audio": "earphone headphone TWS terbaik",
@@ -128,8 +130,8 @@ async def category_detail(category_id: str):
         location="Jakarta, ID",
         market_intelligence=MarketIntelligence(
             summary=f"Pasar {label} sedang aktif dengan banyak pilihan baru bermunculan.",
-            trends=[f"Rising: {label} terbaru"],
-            price_alerts=["Price Alert: pantau diskon flash sale mingguan"],
+            trends=[f"Sedang naik daun: {label} terbaru"],
+            price_alerts=["Info harga: pantau diskon flash sale mingguan"],
         ),
         products=[],  # filled below with raw dicts to match search card shape
     )

@@ -169,7 +169,7 @@ class HealthResponse(BaseModel):
 
 
 class IntentResult(BaseModel):
-    category: Literal["electronics", "coming_soon", "ambiguous"]
+    category: Literal["electronics", "coming_soon", "ambiguous", "off_topic"]
     confidence: float = 0.0
     detected_intent: str = ""
     needs_clarification: bool = False

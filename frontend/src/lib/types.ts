@@ -74,7 +74,7 @@ export interface PriceInfo {
   price_formatted: string;
   url: string;
   is_lowest: boolean;
-  note: string;
+  note: string | null;
 }
 
 export interface SentimentScore {
@@ -91,11 +91,8 @@ export interface ProductDetail {
   prices: PriceInfo[];
   why_this_fits: string;
   fit_reasons: { icon: string; title: string; description: string }[];
-  sentiment: {
-    display_quality: SentimentScore;
-    build_design: SentimentScore;
-    value_for_money: SentimentScore;
-  };
+  // Backend key set varies (often just "overall_quality", sometimes empty) — see memory: autocari-backend-integration.
+  sentiment: Record<string, SentimentScore>;
   pros: string[];
   cons: string[];
   specifications: Record<string, string>;

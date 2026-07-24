@@ -27,7 +27,7 @@ export function SearchResults({ data, query }: SearchResultsProps) {
 
       <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {data.products.map((p) => (
-          <ProductCard key={p.id} product={p} />
+          <ProductCard key={p.id} product={p} fromQuery={query} />
         ))}
       </div>
 

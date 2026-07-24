@@ -32,18 +32,27 @@ class LLMError(Exception):
 # Prompts
 # --------------------------------------------------------------------------- #
 
-INTENT_SYSTEM = """Kamu adalah intent classifier untuk platform rekomendasi produk Indonesia.
+INTENT_SYSTEM = """Kamu adalah intent classifier untuk platform rekomendasi PRODUK Indonesia (Autocari).
+Autocari HANYA membantu mencari & merekomendasikan produk untuk dibeli — bukan asisten umum.
+
 Klasifikasikan query berikut ke salah satu kategori:
 - "electronics": produk elektronik, gadget, HP, laptop, monitor, earphone,
   keyboard, mouse, kamera, TV, AC, kulkas, mesin cuci, dll
 - "coming_soon": saham, investasi, crypto, obat, suplemen, travel, hotel,
-  tiket, kursus, buku, fashion, baju, sepatu, makanan, dll
+  tiket, kursus, buku, fashion, baju, sepatu, makanan, dll — kategori PRODUK
+  yang belum kami dukung, tapi user tetap jelas mencari sebuah produk untuk dibeli
 - "ambiguous": query terlalu vague, hanya 1-2 kata tanpa konteks,
-  atau tidak jelas produk apa yang dicari
+  tapi user JELAS sedang mencari sebuah produk untuk dibeli
+- "off_topic": query BUKAN pencarian produk sama sekali — pertanyaan pengetahuan umum,
+  cara membuat/memasak sesuatu, minta terjemahan, pertanyaan faktual, coding/tugas,
+  obrolan santai, atau apa pun yang tidak berkaitan dengan mencari produk untuk dibeli.
+  Contoh: "cara buat nasi goreng", "apa itu machine learning", "siapa presiden indonesia",
+  "tolong terjemahkan hello". Kalau ragu antara "ambiguous" dan "off_topic", tanyakan:
+  apakah user sedang mencari PRODUK untuk dibeli? Kalau tidak, pilih "off_topic".
 
 Respond ONLY in this exact JSON format, no preamble:
 {
-  "category": "electronics|coming_soon|ambiguous",
+  "category": "electronics|coming_soon|ambiguous|off_topic",
   "confidence": 0.95,
   "detected_intent": "mencari laptop untuk coding",
   "needs_clarification": false,
@@ -51,8 +60,17 @@ Respond ONLY in this exact JSON format, no preamble:
 }"""
 
 OPTIMIZE_SYSTEM = """Kamu mengoptimalkan query pencarian produk agar hasil Google Shopping lebih relevan.
-Reformulasikan query user menjadi keyword pencarian yang efektif dalam Bahasa Indonesia/Inggris,
-konversi budget ke angka (mis. "8 juta" -> "8000000 IDR"), tambah "Indonesia" jika relevan.
+Reformulasikan query user menjadi keyword pencarian produk yang singkat dan efektif.
+
+PENTING: Google Shopping mencocokkan berdasarkan judul listing produk, bukan kalimat natural language.
+- JANGAN sertakan angka budget/harga atau kata seperti "budget", "di bawah", "dibawah", "juta", "IDR".
+  Budget tetap dipakai di tahap ranking selanjutnya, jadi aman dihilangkan di sini.
+  Contoh: "hp buat edit video dibawah 10 juta" -> "handphone untuk edit video" (BUKAN "hp edit video di bawah 10 juta")
+- Fokus ke jenis produk + kata kunci kebutuhan/spesifikasi (mis. "kamera bagus", "RAM besar", "gaming").
+- Kata "hp" sering berarti ponsel/handphone, TAPI Google Shopping bisa salah mengartikannya sebagai
+  merek laptop "HP" (Hewlett-Packard). Kalau user jelas maksudnya ponsel, ganti "hp" dengan "handphone",
+  JANGAN dibiarkan sebagai "hp" saja.
+- Boleh Bahasa Indonesia atau Inggris, mana yang lebih umum dipakai di judul listing produk.
 
 Respond ONLY in this exact JSON format:
 { "optimized_query": "..." }"""
@@ -221,8 +239,12 @@ class LLMService:
 
     async def optimize_query(self, query: str) -> str:
         try:
+            # "reasoning" tier (not "classifier"): the bigger model reliably handles
+            # Indonesian slang/abbreviations (e.g. "casan" -> "charger", not dropped
+            # or misread as a phone search) where the small classifier model doesn't.
+            # ~+80ms measured — negligible next to the multi-second full pipeline.
             data = await self._complete_json(
-                OPTIMIZE_SYSTEM, f"Query: {query}", tier="classifier"
+                OPTIMIZE_SYSTEM, f"Query: {query}", tier="reasoning"
             )
             return (data.get("optimized_query") or query).strip() or query
         except Exception as exc:  # optimization is best-effort

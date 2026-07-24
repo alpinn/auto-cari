@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { useSearch } from "@/hooks/useSearch";
 import { SearchBox } from "@/components/search/SearchBox";
@@ -25,9 +25,14 @@ function SearchView() {
   const params = useSearchParams();
   const q = params.get("q")?.trim() ?? "";
   const { status, data, run } = useSearch();
+  // Guards against React Strict Mode's dev-only double-invoke of effects,
+  // which would otherwise fire the same search twice (double API cost + rate-limit usage).
+  const lastRunQuery = useRef<string | null>(null);
 
   useEffect(() => {
-    if (q) run({ query: q });
+    if (!q || lastRunQuery.current === q) return;
+    lastRunQuery.current = q;
+    run({ query: q });
   }, [q, run]);
 
   // No query in the URL — invite the user to search.

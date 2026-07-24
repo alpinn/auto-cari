@@ -6,62 +6,6 @@ import { SearchBox } from "@/components/search/SearchBox";
 import { LatestSearches } from "@/components/search/LatestSearches";
 import { ProductCard } from "@/components/product/ProductCard";
 
-// ponytail: no trending/curated endpoint exists — static Phase-1 sample.
-// Replace with a real endpoint when the backend exposes one.
-const CURATED: ProductResult[] = [
-  {
-    id: "ipad-pro-m4",
-    name: "iPad Pro M4 (2024)",
-    image_url: "https://placehold.co/600x450/e8f0fe/1a56db?text=iPad+Pro",
-    price: 16999000,
-    price_formatted: "Rp16.999.000",
-    marketplace: "tokopedia",
-    store_name: "iBox Official",
-    store_badge: "official",
-    rating: 4.9,
-    score: 9.2,
-    pros: ["Layar OLED Tandem menawan", "Performa chip M4 kelas laptop"],
-    cons: ["Aksesori mahal"],
-    ai_reasoning: "Tablet paling powerful untuk kreator digital di Indonesia.",
-    product_url: "https://www.tokopedia.com",
-    is_editor_choice: true,
-  },
-  {
-    id: "sony-wh1000xm5",
-    name: "Sony WH-1000XM5",
-    image_url: "https://placehold.co/600x450/e8f0fe/1a56db?text=WH-1000XM5",
-    price: 4499000,
-    price_formatted: "Rp4.499.000",
-    marketplace: "shopee",
-    store_name: "Sony Center",
-    store_badge: "official",
-    rating: 4.8,
-    score: 9.0,
-    pros: ["Noise cancelling terbaik di kelasnya", "Baterai 30 jam"],
-    cons: ["Tidak bisa dilipat"],
-    ai_reasoning: "Pilihan utama untuk pekerja hybrid yang butuh fokus.",
-    product_url: "https://shopee.co.id",
-    is_editor_choice: false,
-  },
-  {
-    id: "sony-zv-e10-ii",
-    name: "Sony ZV-E10 II",
-    image_url: "https://placehold.co/600x450/e8f0fe/1a56db?text=ZV-E10+II",
-    price: 14999000,
-    price_formatted: "Rp14.999.000",
-    marketplace: "blibli",
-    store_name: "Sony Store",
-    store_badge: "official",
-    rating: 4.7,
-    score: 8.8,
-    pros: ["Autofokus real-time cepat", "Lensa bisa diganti"],
-    cons: ["Tanpa stabilisasi bodi"],
-    ai_reasoning: "Kamera terbaik untuk konten YouTube & TikTok.",
-    product_url: "https://www.blibli.com",
-    is_editor_choice: false,
-  },
-];
-
 async function getCategories(): Promise<Category[]> {
   try {
     const { categories } = await api.getCategories();
@@ -71,8 +15,19 @@ async function getCategories(): Promise<Category[]> {
   }
 }
 
+// Reuses the electronics category listing (real Serper data, 6h cache) — there's
+// no dedicated trending/curated endpoint, so this is the closest real substitute.
+async function getCurated(): Promise<ProductResult[]> {
+  try {
+    const result = await api.getCategoryDetail("electronics");
+    return "products" in result ? result.products.slice(0, 3) : [];
+  } catch {
+    return [];
+  }
+}
+
 export default async function HomePage() {
-  const categories = await getCategories();
+  const [categories, curated] = await Promise.all([getCategories(), getCurated()]);
   const trending = categories.filter((c) => c.available).slice(0, 3);
   const comingSoon = categories.filter((c) => c.coming_soon).slice(0, 3);
 
@@ -81,7 +36,7 @@ export default async function HomePage() {
       {/* Hero */}
       <section className="mx-auto max-w-3xl px-4 text-center">
         <h1 className="text-3xl font-bold tracking-tight sm:text-5xl">
-          What are you looking for today?
+          Lagi cari produk apa hari ini?
         </h1>
         <p className="mx-auto mt-3 max-w-xl text-base-content/60">
           AI advisor siap mencari deal & spesifikasi produk terbaik di Indonesia untukmu.
@@ -145,11 +100,17 @@ export default async function HomePage() {
             Lihat semua <ArrowRight className="size-4" />
           </Link>
         </div>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          {CURATED.map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
-        </div>
+        {curated.length === 0 ? (
+          <p className="rounded-box border border-base-300 bg-base-100 p-6 text-center text-base-content/60">
+            Belum ada rekomendasi saat ini.
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            {curated.map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );

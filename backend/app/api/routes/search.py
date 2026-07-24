@@ -98,6 +98,14 @@ async def search(req: SearchRequest, request: Request):
 
         category = intent.category
 
+        if category == "off_topic":
+            _log_async(effective_query, "off_topic", False, started, 0, req.session_id)
+            return _error(
+                "OUT_OF_SCOPE",
+                "Autocari khusus membantu pencarian & rekomendasi produk. Coba tanya soal produk yang ingin kamu cari, ya!",
+                400,
+            )
+
         if category == "coming_soon":
             label = intent_classifier.coming_soon_label(intent.detected_intent)
             resp = SearchComingSoonResponse(
