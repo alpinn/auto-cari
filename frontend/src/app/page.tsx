@@ -95,7 +95,7 @@ export default async function HomePage() {
 
       {/* Trending Categories */}
       <section className="mx-auto max-w-6xl px-4">
-        <h2 className="mb-4 text-xl font-bold">Trending Categories</h2>
+        <h2 className="mb-4 text-xl font-bold">Kategori Populer</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {trending.map((c) => (
             <Link
@@ -129,7 +129,7 @@ export default async function HomePage() {
             className="focus-ring flex min-h-40 flex-col items-center justify-center gap-2 rounded-box border-2 border-dashed border-base-300 p-5 text-base-content/70 transition-colors duration-200 hover:border-primary hover:text-primary"
           >
             <LayoutGrid className="size-7" />
-            <span className="font-semibold">All Categories</span>
+            <span className="font-semibold">Semua Kategori</span>
           </Link>
         </div>
       </section>
@@ -137,7 +137,7 @@ export default async function HomePage() {
       {/* Curated For You */}
       <section className="mx-auto max-w-6xl px-4">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-bold">Curated For You</h2>
+          <h2 className="text-xl font-bold">Pilihan Untuk Anda</h2>
           <Link
             href="/categories"
             className="focus-ring flex items-center gap-1 rounded px-1 text-sm font-medium text-primary transition-colors duration-200 hover:underline"

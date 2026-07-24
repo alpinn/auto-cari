@@ -6,9 +6,9 @@ import { Bell, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const LINKS = [
-  { href: "/", label: "Explore" },
-  { href: "/how-it-works", label: "How it Works" },
-  { href: "/about-ai", label: "About AI" },
+  { href: "/", label: "Jelajahi" },
+  { href: "/how-it-works", label: "Cara Kerja" },
+  { href: "/about-ai", label: "Tentang AI" },
 ];
 
 export function Navbar() {
@@ -48,7 +48,7 @@ export function Navbar() {
           {/* Bell — non-functional in Phase 1 */}
           <button
             type="button"
-            aria-label="Notifications"
+            aria-label="Notifikasi"
             className="btn btn-ghost btn-circle"
           >
             <Bell className="size-5" />

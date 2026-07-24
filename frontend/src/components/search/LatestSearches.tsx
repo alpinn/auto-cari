@@ -20,7 +20,7 @@ export function LatestSearches() {
     <section className="mx-auto max-w-6xl px-4">
       <div className="mb-3 flex items-center justify-between">
         <h2 className="flex items-center gap-2 text-sm font-semibold text-base-content/70">
-          <Clock className="size-4" /> Latest Searches
+          <Clock className="size-4" /> Pencarian Terakhir
         </h2>
         <button
           type="button"
@@ -30,7 +30,7 @@ export function LatestSearches() {
           }}
           className="focus-ring rounded px-1 text-sm text-primary transition-colors duration-200 hover:underline"
         >
-          Clear history
+          Hapus riwayat
         </button>
       </div>
       <div className="flex flex-wrap gap-2">

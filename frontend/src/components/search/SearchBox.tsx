@@ -52,7 +52,7 @@ export function SearchBox({
         autoFocus={autoFocus}
         onChange={(e) => setValue(e.target.value)}
         placeholder={placeholder}
-        aria-label="Search query"
+        aria-label="Kotak pencarian"
         className={cn(
           "min-w-0 flex-1 bg-transparent outline-none placeholder:text-base-content/40",
           size === "lg" ? "text-base" : "text-sm",
@@ -65,7 +65,7 @@ export function SearchBox({
           size === "lg" ? "" : "btn-sm",
         )}
       >
-        Ask AI
+        Tanya AI
       </button>
     </form>
   );

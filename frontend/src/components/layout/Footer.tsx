@@ -2,10 +2,10 @@ import Link from "next/link";
 import { Sparkles } from "lucide-react";
 
 const FOOTER_LINKS = [
-  { href: "/about-ai", label: "Privacy Policy" },
-  { href: "/about-ai", label: "Terms of Service" },
-  { href: "/about-ai", label: "AI Transparency" },
-  { href: "/about-ai", label: "Contact Support" },
+  { href: "/about-ai", label: "Kebijakan Privasi" },
+  { href: "/about-ai", label: "Syarat Layanan" },
+  { href: "/about-ai", label: "Transparansi AI" },
+  { href: "/about-ai", label: "Hubungi Dukungan" },
 ];
 
 export function Footer() {
@@ -18,7 +18,7 @@ export function Footer() {
             <span>Autocari</span>
           </div>
           <p className="mt-1 text-sm text-base-content/60">
-            © 2024 Autocari. Smart Shopping for Indonesia.
+            © 2026 Autocari. Belanja Cerdas untuk Indonesia.
           </p>
         </div>
         <ul className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-base-content/70">
