@@ -36,13 +36,18 @@ INTENT_SYSTEM = """Kamu adalah intent classifier untuk platform rekomendasi PROD
 Autocari HANYA membantu mencari & merekomendasikan produk untuk dibeli — bukan asisten umum.
 
 Klasifikasikan query berikut ke salah satu kategori:
-- "electronics": produk elektronik, gadget, HP, laptop, monitor, earphone,
-  keyboard, mouse, kamera, TV, AC, kulkas, mesin cuci, dll
-- "coming_soon": saham, investasi, crypto, obat, suplemen, travel, hotel,
-  tiket, kursus, buku, fashion, baju, sepatu, makanan, dll — kategori PRODUK
-  yang belum kami dukung, tapi user tetap jelas mencari sebuah produk untuk dibeli
-- "ambiguous": query terlalu vague, hanya 1-2 kata tanpa konteks,
-  tapi user JELAS sedang mencari sebuah produk untuk dibeli
+
+- "electronics": HP, laptop, monitor, earphone, keyboard, mouse, kamera, TV, AC, kulkas,
+  mesin cuci, dan gadget/elektronik lainnya.
+
+- "coming_soon": produk NON-elektronik yang jelas ingin dibeli user, kategori ini belum kami
+  dukung. Termasuk: SEPATU, BAJU, TAS, dan fashion lainnya; saham, investasi, crypto;
+  obat, suplemen, vitamin; tiket, hotel, travel; kursus, buku; makanan, skincare.
+  Contoh: "sepatu running", "baju kemeja pria", "saham bagus buat pemula", "obat sakit kepala".
+
+- "ambiguous": query terlalu vague (1-2 kata tanpa konteks jelas), tapi user JELAS sedang
+  mencari sebuah produk untuk dibeli (elektronik atau non-elektronik).
+
 - "off_topic": query BUKAN pencarian produk sama sekali — pertanyaan pengetahuan umum,
   cara membuat/memasak sesuatu, minta terjemahan, pertanyaan faktual, coding/tugas,
   obrolan santai, atau apa pun yang tidak berkaitan dengan mencari produk untuk dibeli.
@@ -50,9 +55,13 @@ Klasifikasikan query berikut ke salah satu kategori:
   "tolong terjemahkan hello". Kalau ragu antara "ambiguous" dan "off_topic", tanyakan:
   apakah user sedang mencari PRODUK untuk dibeli? Kalau tidak, pilih "off_topic".
 
+Isi "category" HARUS berupa TEPAT SATU dari keempat kata ini: electronics, coming_soon,
+ambiguous, off_topic — jangan pernah menulis lebih dari satu kata atau menggabungkannya
+dengan "|" atau tanda baca lain.
+
 Respond ONLY in this exact JSON format, no preamble:
 {
-  "category": "electronics|coming_soon|ambiguous|off_topic",
+  "category": "electronics",
   "confidence": 0.95,
   "detected_intent": "mencari laptop untuk coding",
   "needs_clarification": false,
@@ -170,7 +179,7 @@ class LLMService:
         return bool(settings.CLAUDE_API_KEY)
 
     # ----- core completion -----
-    async def _complete(self, system: str, user: str, *, tier: str) -> str:
+    async def _complete(self, system: str, user: str, *, tier: str, temperature: float = 0.3) -> str:
         """Return raw text completion for a (system, user) pair on the given tier."""
         if settings.is_groq:
             model = (
@@ -186,7 +195,7 @@ class LLMService:
                         {"role": "system", "content": system},
                         {"role": "user", "content": user},
                     ],
-                    temperature=0.3,
+                    temperature=temperature,
                     timeout=settings.HTTP_TIMEOUT_SECONDS * 2,
                 )
                 return resp.choices[0].message.content or ""
@@ -204,7 +213,7 @@ class LLMService:
                     max_tokens=2048,
                     system=system,
                     messages=[{"role": "user", "content": user}],
-                    temperature=0.3,
+                    temperature=temperature,
                     timeout=settings.HTTP_TIMEOUT_SECONDS * 2,
                 )
                 return "".join(
@@ -213,14 +222,16 @@ class LLMService:
 
         return await with_retry(_call, service="llm", max_attempts=2, base_delay=0.5)
 
-    async def _complete_json(self, system: str, user: str, *, tier: str) -> dict:
+    async def _complete_json(
+        self, system: str, user: str, *, tier: str, temperature: float = 0.3
+    ) -> dict:
         """Complete and parse JSON, with one reparse retry."""
-        raw = await self._complete(system, user, tier=tier)
+        raw = await self._complete(system, user, tier=tier, temperature=temperature)
         try:
             return _extract_json(raw)
         except (json.JSONDecodeError, LLMError):
             logger.warning("LLM JSON parse failed, retrying once")
-            raw = await self._complete(system, user, tier=tier)
+            raw = await self._complete(system, user, tier=tier, temperature=temperature)
             try:
                 return _extract_json(raw)
             except (json.JSONDecodeError, LLMError) as exc:
@@ -228,9 +239,20 @@ class LLMService:
 
     # ----- high-level operations -----
     async def classify_intent(self, query: str) -> IntentResult:
+        # temperature=0 was tried here but made JSON formatting LESS reliable on
+        # this model/prompt (Groq's serving isn't perfectly deterministic even at
+        # temp=0, and greedy decoding occasionally produced malformed output) —
+        # default temperature (0.3) plus the fallback below is the safer combo.
         data = await self._complete_json(INTENT_SYSTEM, f"Query: {query}", tier="classifier")
+        category = str(data.get("category", "ambiguous")).strip().lower()
+        if category not in ("electronics", "coming_soon", "ambiguous", "off_topic"):
+            # Model returned something malformed (typo/extra word) — treat as
+            # "ambiguous" (asks a clarifying question) instead of crashing with a
+            # Pydantic ValidationError on an unrecognized Literal value.
+            logger.warning("unrecognized intent category %r, falling back to ambiguous", category)
+            category = "ambiguous"
         return IntentResult(
-            category=data.get("category", "ambiguous"),
+            category=category,
             confidence=float(data.get("confidence", 0.0) or 0.0),
             detected_intent=data.get("detected_intent", "") or "",
             needs_clarification=bool(data.get("needs_clarification", False)),

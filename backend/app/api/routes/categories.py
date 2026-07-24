@@ -5,6 +5,7 @@ search pipeline to populate live products and adds a Market Intelligence
 summary (LLM-light placeholder, cached).
 """
 
+import asyncio
 import logging
 
 from fastapi import APIRouter
@@ -122,6 +123,11 @@ async def category_detail(category_id: str):
         ]
     except Exception as exc:
         logger.warning("category product fetch failed: %s", exc)
+
+    for p in products:
+        asyncio.create_task(
+            cache_service.set_json(f"product:{p['id']}", p, ttl=settings.PRODUCT_CACHE_TTL)
+        )
 
     detail = CategoryDetailResponse(
         id=category_id,
