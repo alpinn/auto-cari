@@ -1,8 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, Sparkles } from "lucide-react";
+import { Bell, Menu, Sparkles, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const LINKS = [
@@ -13,8 +14,17 @@ const LINKS = [
 
 export function Navbar() {
   const pathname = usePathname();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [lastPathname, setLastPathname] = useState(pathname);
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
+
+  // Close the mobile menu whenever the route changes (adjust state during
+  // render on prop change, per React's guidance, instead of an effect).
+  if (pathname !== lastPathname) {
+    setLastPathname(pathname);
+    setMobileOpen(false);
+  }
 
   return (
     <header className="sticky top-0 z-30 border-b border-base-300 bg-base-100/80 backdrop-blur">
@@ -53,8 +63,36 @@ export function Navbar() {
           >
             <Bell className="size-5" />
           </button>
+          <button
+            type="button"
+            aria-label={mobileOpen ? "Tutup menu" : "Buka menu"}
+            aria-expanded={mobileOpen}
+            onClick={() => setMobileOpen((v) => !v)}
+            className="btn btn-ghost btn-circle md:hidden"
+          >
+            {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+          </button>
         </div>
       </nav>
+
+      {mobileOpen && (
+        <ul className="border-t border-base-300 bg-base-100 px-4 py-2 md:hidden">
+          {LINKS.map((l) => (
+            <li key={l.href}>
+              <Link
+                href={l.href}
+                aria-current={isActive(l.href) ? "page" : undefined}
+                className={cn(
+                  "focus-ring block rounded-field px-3 py-2.5 text-sm font-medium transition-colors duration-200 hover:bg-base-200",
+                  isActive(l.href) ? "text-primary" : "text-base-content/70",
+                )}
+              >
+                {l.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
     </header>
   );
 }

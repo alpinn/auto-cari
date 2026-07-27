@@ -5,6 +5,7 @@ import { ProductCard } from "@/components/product/ProductCard";
 import { MarketIntelligence } from "@/components/category/MarketIntelligence";
 import { ComingSoon } from "@/components/ui/ComingSoon";
 import { ErrorState } from "@/components/ui/ErrorState";
+import { SearchBox } from "@/components/search/SearchBox";
 import type { CategoryDetail, SearchComingSoonResponse } from "@/lib/types";
 
 interface CategoryPageProps {
@@ -58,6 +59,11 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
           {category.match_count} produk ditemukan di {category.location}
         </p>
       </div>
+
+      <SearchBox
+        size="md"
+        placeholder={`Perjelas pencarian di ${category.label}, contoh: yang RAM 16GB`}
+      />
 
       {category.products.length === 0 ? (
         <p className="rounded-box border border-base-300 bg-base-100 p-6 text-center text-base-content/60">
