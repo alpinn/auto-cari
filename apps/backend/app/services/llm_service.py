@@ -110,6 +110,9 @@ Kriteria penilaian:
 4. Insight dari review/artikel trusted (10%)
 
 Rules:
+- WAJIB sertakan SEMUA produk dari index 0 sampai N-1 di array "products" — jangan pernah
+  membuang/skip produk manapun, walaupun skornya rendah atau kurang relevan. User perlu
+  melihat semua kandidat, bukan hanya yang terbaik menurutmu.
 - Maksimal 1 produk is_editor_choice = true (yang terbaik overall)
 - Score antara 0.0 - 10.0
 - pros: 2-3 poin singkat dalam Bahasa Indonesia
@@ -197,6 +200,11 @@ class LLMService:
                     ],
                     temperature=temperature,
                     timeout=settings.HTTP_TIMEOUT_SECONDS * 2,
+                    # gpt-oss models spend hidden reasoning tokens by default (measured
+                    # ~35% of total tokens on a one-line task) — low effort is plenty for
+                    # classification/JSON-formatting tasks and keeps us under Groq's tight
+                    # free-tier TPM cap (8000 tokens/min for gpt-oss-120b).
+                    reasoning_effort="low",
                 )
                 return resp.choices[0].message.content or ""
 

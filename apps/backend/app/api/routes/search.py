@@ -125,7 +125,7 @@ async def search(req: SearchRequest, request: Request):
 
     # 6. Parallel fetch: Serper (products) + Tavily (reviews) ---------------
     serper_raw, tavily_raw = await asyncio.gather(
-        serper_service.search_shopping(optimized, num=10),
+        serper_service.search_shopping(optimized, num=40),
         tavily_service.search_reviews(optimized, max_results=3),
         return_exceptions=True,
     )
@@ -151,7 +151,7 @@ async def search(req: SearchRequest, request: Request):
     if not normalized and optimized != effective_query:
         logger.info("no marketplace matches for optimized query, retrying with raw query")
         try:
-            retry_raw = await serper_service.search_shopping(effective_query, num=10)
+            retry_raw = await serper_service.search_shopping(effective_query, num=40)
             normalized = normalize_serper_products(retry_raw, cap=settings.MAX_PRODUCTS_TO_LLM)
         except ExternalServiceError as exc:
             logger.warning("raw-query retry failed, keeping empty result: %s", exc)

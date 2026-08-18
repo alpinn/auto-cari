@@ -30,7 +30,7 @@ class SerperService:
             )
         return self._client
 
-    async def search_shopping(self, query: str, num: int = 10) -> list[dict]:
+    async def search_shopping(self, query: str, num: int = 40) -> list[dict]:
         """Return raw Google Shopping items for `query` (Indonesia locale)."""
         if not self.configured:
             raise ExternalServiceError("serper", "SERPER_API_KEY not set")

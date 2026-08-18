@@ -99,7 +99,7 @@ async def category_detail(category_id: str):
     label = SUBCATEGORY_LABELS.get(category_id, category_id.title())
     products = []
     try:
-        raw = await serper_service.search_shopping(CATEGORY_SEARCH[category_id], num=12)
+        raw = await serper_service.search_shopping(CATEGORY_SEARCH[category_id], num=40)
         normalized = normalize_serper_products(raw, cap=12)
         products = [
             {

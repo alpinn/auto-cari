@@ -30,8 +30,9 @@ class Settings(BaseSettings):
     # Groq (free tier) — OpenAI-compatible
     GROQ_API_KEY: str = ""
     GROQ_BASE_URL: str = "https://api.groq.com/openai/v1"
-    GROQ_CLASSIFIER_MODEL: str = "llama-3.1-8b-instant"
-    GROQ_REASONING_MODEL: str = "llama-3.3-70b-versatile"
+    # llama-3.1-8b-instant / llama-3.3-70b-versatile were retired by Groq on 2026-08-16
+    GROQ_CLASSIFIER_MODEL: str = "openai/gpt-oss-20b"
+    GROQ_REASONING_MODEL: str = "openai/gpt-oss-120b"
 
     # Claude (prod)
     CLAUDE_API_KEY: str = ""

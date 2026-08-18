@@ -60,6 +60,10 @@ class ProductAgent:
             if cards[-1].is_editor_choice:
                 editor_used = True
 
+        for idx in range(len(normalized)):
+            if idx not in seen:
+                cards.append(self._to_card(normalized[idx], idx, by_index, editor_used))
+
         summary = result.summary or "Berikut rekomendasi produk terbaik untuk Anda."
         return summary, cards
 
