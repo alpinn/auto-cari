@@ -13,6 +13,22 @@ import re
 ALLOWED_MARKETPLACES = ["tokopedia", "shopee", "lazada", "blibli"]
 
 _DIGITS_RE = re.compile(r"\d+")
+_BUDGET_RE = re.compile(r"(\d+(?:[.,]\d+)?)\s*(juta|jt|ribu|rb)\b", re.IGNORECASE)
+
+
+def extract_budget_max(query: str) -> int | None:
+    """Parse the highest budget figure mentioned in an Indonesian query.
+
+    Handles "20 juta", "20jt", "budget 20 juta", "500rb", etc. Takes the last
+    match since the budget is usually stated at the end of the sentence.
+    """
+    matches = list(_BUDGET_RE.finditer(query or ""))
+    if not matches:
+        return None
+    value_str, unit = matches[-1].groups()
+    value = float(value_str.replace(",", "."))
+    multiplier = 1_000_000 if unit.lower() in ("juta", "jt") else 1_000
+    return int(value * multiplier)
 
 
 def format_price(price_int: int) -> str:
@@ -64,10 +80,17 @@ def _external_id(marketplace: str, url: str, title: str) -> str:
     return hashlib.md5(base.encode("utf-8")).hexdigest()
 
 
-def normalize_serper_products(raw_products: list[dict], cap: int = 10) -> list[dict]:
+def normalize_serper_products(
+    raw_products: list[dict], cap: int = 10, budget_max: int | None = None
+) -> list[dict]:
     """Map raw Serper shopping items -> normalized dicts ready for the LLM/DB.
 
     Only keeps items from allowed marketplaces with a parseable price and URL.
+    Serper's own ordering is relevance-ranked, not price-ranked, and skews toward
+    mass-market listings — so when budget_max is known, sort candidates closest
+    to (at or under) the budget ceiling first, before applying cap. Otherwise a
+    fixed cap silently drops higher-priced options that never happened to rank
+    early in Serper's raw order.
     """
     normalized: list[dict] = []
     for item in raw_products or []:
@@ -109,7 +132,35 @@ def normalize_serper_products(raw_products: list[dict], cap: int = 10) -> list[d
                 "product_url": url,
             }
         )
-        if len(normalized) >= cap:
-            break
 
-    return normalized
+    if budget_max is not None:
+        def _distance(p: dict) -> tuple[int, int]:
+            price = p["price"]
+            if price <= budget_max:
+                return (0, budget_max - price)
+            return (1, price - budget_max)
+
+        normalized.sort(key=_distance)
+
+    return normalized[:cap]
+
+
+def _demo() -> None:
+    assert extract_budget_max("smartphone untuk video dengan budget 20 juta") == 20_000_000
+    assert extract_budget_max("hp dibawah 1.5jt") == 1_500_000
+    assert extract_budget_max("earphone 500rb") == 500_000
+    assert extract_budget_max("laptop gaming") is None
+
+    raw = [
+        {"link": "https://shopee.co.id/a", "price": "Rp 3.000.000", "title": "Cheap phone"},
+        {"link": "https://shopee.co.id/b", "price": "Rp 19.500.000", "title": "Near-budget phone"},
+        {"link": "https://shopee.co.id/c", "price": "Rp 25.000.000", "title": "Over-budget phone"},
+    ]
+    result = normalize_serper_products(raw, cap=2, budget_max=20_000_000)
+    assert [p["name"] for p in result] == ["Near-budget phone", "Cheap phone"], result
+
+    print("normalizer._demo OK")
+
+
+if __name__ == "__main__":
+    _demo()

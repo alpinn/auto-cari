@@ -28,7 +28,7 @@ from app.services.llm_service import LLMError, llm_service
 from app.services.serper_service import serper_service
 from app.services.tavily_service import tavily_service
 from app.utils.http import ExternalServiceError
-from app.utils.normalizer import normalize_serper_products
+from app.utils.normalizer import extract_budget_max, normalize_serper_products
 from app.utils.rate_limiter import check_rate_limit
 from app.utils.sanitizer import InvalidQueryError, sanitize_query
 
@@ -141,7 +141,10 @@ async def search(req: SearchRequest, request: Request):
         reviews = tavily_raw
 
     # 7. Normalize ----------------------------------------------------------
-    normalized = normalize_serper_products(serper_raw, cap=settings.MAX_PRODUCTS_TO_LLM)
+    budget_max = extract_budget_max(effective_query)
+    normalized = normalize_serper_products(
+        serper_raw, cap=settings.MAX_PRODUCTS_TO_LLM, budget_max=budget_max
+    )
 
     # Google Shopping's live ranking is non-deterministic — the same query can
     # occasionally come back with zero results from our 4 tracked marketplaces
@@ -152,7 +155,9 @@ async def search(req: SearchRequest, request: Request):
         logger.info("no marketplace matches for optimized query, retrying with raw query")
         try:
             retry_raw = await serper_service.search_shopping(effective_query, num=40)
-            normalized = normalize_serper_products(retry_raw, cap=settings.MAX_PRODUCTS_TO_LLM)
+            normalized = normalize_serper_products(
+                retry_raw, cap=settings.MAX_PRODUCTS_TO_LLM, budget_max=budget_max
+            )
         except ExternalServiceError as exc:
             logger.warning("raw-query retry failed, keeping empty result: %s", exc)
 
