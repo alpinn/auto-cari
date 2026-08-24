@@ -8,7 +8,7 @@ translate that into an HTTP 400.
 import re
 
 MAX_QUERY_LEN = 300
-MIN_QUERY_LEN = 3
+MIN_QUERY_LEN = 5
 
 _HTML_TAG_RE = re.compile(r"<[^>]*>")
 _CONTROL_RE = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
@@ -36,7 +36,7 @@ def sanitize_query(query: str) -> str:
     cleaned = _WHITESPACE_RE.sub(" ", cleaned).strip()
 
     if len(cleaned) < MIN_QUERY_LEN:
-        raise InvalidQueryError("Query terlalu pendek. Minimal 3 karakter.")
+        raise InvalidQueryError("Query terlalu pendek. Minimal 5 karakter.")
 
     if len(cleaned) > MAX_QUERY_LEN:
         cleaned = cleaned[:MAX_QUERY_LEN].strip()
@@ -45,3 +45,19 @@ def sanitize_query(query: str) -> str:
         raise InvalidQueryError("Query mengandung pola yang tidak diizinkan.")
 
     return cleaned
+
+
+def _demo() -> None:
+    assert sanitize_query("laptop coding") == "laptop coding"
+    assert sanitize_query("<b>hp</b>  gaming") == "hp gaming"
+    for bad in ("hi", "  ab ", "1; drop table x"):
+        try:
+            sanitize_query(bad)
+            raise AssertionError(f"expected InvalidQueryError for {bad!r}")
+        except InvalidQueryError:
+            pass
+    print("sanitizer._demo OK")
+
+
+if __name__ == "__main__":
+    _demo()
