@@ -4,7 +4,15 @@ import { Check, X, Star, ExternalLink } from "lucide-react";
 import type { ProductResult } from "@/lib/types";
 import { cn, marketplaceBadge, storeBadgeLabel } from "@/lib/utils";
 
-export function ProductCard({ product, fromQuery }: { product: ProductResult; fromQuery?: string }) {
+export function ProductCard({
+  product,
+  fromQuery,
+  compare,
+}: {
+  product: ProductResult;
+  fromQuery?: string;
+  compare?: { checked: boolean; onToggle: () => void; disabled?: boolean };
+}) {
   const mp = marketplaceBadge(product.marketplace);
   const store = storeBadgeLabel(product.store_badge);
   const href = fromQuery
@@ -13,28 +21,46 @@ export function ProductCard({ product, fromQuery }: { product: ProductResult; fr
 
   return (
     <div className="group flex flex-col overflow-hidden rounded-box border border-base-300 bg-base-100 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md">
-      <Link href={href} className="focus-ring relative block aspect-4/3 bg-base-200">
-        <Image
-          src={product.image_url}
-          alt={product.name}
-          fill
-          unoptimized
-          sizes="(max-width: 768px) 100vw, 33vw"
-          className="object-contain p-4"
-        />
-        {/* Category-browsing products are never AI-ranked (score always 0) — hide the badge instead of showing a misleading "0.0/10". */}
-        {product.score > 0 && (
-          <span className="absolute right-2 top-2 flex items-center gap-1 rounded-field bg-neutral/90 px-2 py-1 text-xs font-semibold text-neutral-content">
-            <Star className="size-3 fill-warning text-warning" />
-            {product.score.toFixed(1)}/10
-          </span>
+      <div className="relative">
+        <Link href={href} className="focus-ring relative block aspect-4/3 bg-base-200">
+          <Image
+            src={product.image_url}
+            alt={product.name}
+            fill
+            unoptimized
+            sizes="(max-width: 768px) 100vw, 33vw"
+            className="object-contain p-4"
+          />
+          {/* Category-browsing products are never AI-ranked (score always 0) — hide the badge instead of showing a misleading "0.0/10". */}
+          {product.score > 0 && (
+            <span className="absolute right-2 top-2 flex items-center gap-1 rounded-field bg-neutral/90 px-2 py-1 text-xs font-semibold text-neutral-content">
+              <Star className="size-3 fill-warning text-warning" />
+              {product.score.toFixed(1)}/10
+            </span>
+          )}
+          {product.is_editor_choice && (
+            <span className="absolute left-2 top-2 rounded-field bg-primary px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-primary-content">
+              Pilihan Editor
+            </span>
+          )}
+        </Link>
+        {compare && (
+          <label
+            className="absolute bottom-2 left-2 flex items-center gap-1.5 rounded-field bg-base-100/95 px-2 py-1 text-xs font-medium shadow-sm"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <input
+              type="checkbox"
+              className="checkbox checkbox-sm checkbox-primary"
+              checked={compare.checked}
+              onChange={compare.onToggle}
+              disabled={compare.disabled}
+              aria-label={`Bandingkan ${product.name}`}
+            />
+            Bandingkan
+          </label>
         )}
-        {product.is_editor_choice && (
-          <span className="absolute left-2 top-2 rounded-field bg-primary px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-primary-content">
-            Pilihan Editor
-          </span>
-        )}
-      </Link>
+      </div>
 
       <div className="flex flex-1 flex-col gap-3 p-4">
         <div className="flex flex-wrap items-center gap-2">

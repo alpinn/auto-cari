@@ -40,9 +40,13 @@ class CacheService:
         if not self.enabled:
             return None
         client = await self._get_client()
-        resp = await client.post("/", json=[str(a) for a in args])
-        resp.raise_for_status()
-        data = resp.json()
+        try:
+            resp = await client.post("/", json=[str(a) for a in args])
+            resp.raise_for_status()
+            data = resp.json()
+        except httpx.HTTPError as exc:
+            logger.warning("cache command %s failed: %s", args[0] if args else "?", exc)
+            return None
         if "error" in data:
             raise RuntimeError(f"Redis error: {data['error']}")
         return data.get("result")

@@ -33,6 +33,7 @@ class Settings(BaseSettings):
     # llama-3.1-8b-instant / llama-3.3-70b-versatile were retired by Groq on 2026-08-16
     GROQ_CLASSIFIER_MODEL: str = "openai/gpt-oss-20b"
     GROQ_REASONING_MODEL: str = "openai/gpt-oss-120b"
+    GROQ_REASONING_EFFORT: Literal["low", "medium", "high"] = "low"
 
     # Claude (prod)
     CLAUDE_API_KEY: str = ""

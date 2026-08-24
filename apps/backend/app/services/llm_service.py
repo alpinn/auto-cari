@@ -200,11 +200,7 @@ class LLMService:
                     ],
                     temperature=temperature,
                     timeout=settings.HTTP_TIMEOUT_SECONDS * 2,
-                    # gpt-oss models spend hidden reasoning tokens by default (measured
-                    # ~35% of total tokens on a one-line task) — low effort is plenty for
-                    # classification/JSON-formatting tasks and keeps us under Groq's tight
-                    # free-tier TPM cap (8000 tokens/min for gpt-oss-120b).
-                    reasoning_effort="low",
+                    reasoning_effort=settings.GROQ_REASONING_EFFORT,
                 )
                 return resp.choices[0].message.content or ""
 

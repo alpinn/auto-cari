@@ -19,7 +19,8 @@ export function SearchResults({ data, query }: SearchResultsProps) {
 
   useEffect(() => {
     if (!compareOpen) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setCompareOpen(false);
+    const onKey = (e: KeyboardEvent) =>
+      e.key === "Escape" && setCompareOpen(false);
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [compareOpen]);
@@ -62,35 +63,37 @@ export function SearchResults({ data, query }: SearchResultsProps) {
 
       <div className="mt-4 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {data.products.map((p) => (
-          <div key={p.id} className="relative">
-            {canCompare && (
-              <label className="absolute left-3 top-3 z-10 flex items-center gap-1.5 rounded-field bg-base-100/95 px-2 py-1 text-xs font-medium shadow-sm">
-                <input
-                  type="checkbox"
-                  className="checkbox checkbox-sm checkbox-primary"
-                  checked={selected.includes(p.id)}
-                  onChange={() => toggle(p.id)}
-                  disabled={!selected.includes(p.id) && selected.length >= MAX_COMPARE}
-                  aria-label={`Bandingkan ${p.name}`}
-                />
-                Bandingkan
-              </label>
-            )}
-            <ProductCard product={p} fromQuery={query} />
-          </div>
+          <ProductCard
+            key={p.id}
+            product={p}
+            fromQuery={query}
+            compare={
+              canCompare
+                ? {
+                    checked: selected.includes(p.id),
+                    onToggle: () => toggle(p.id),
+                    disabled:
+                      !selected.includes(p.id) && selected.length >= MAX_COMPARE,
+                  }
+                : undefined
+            }
+          />
         ))}
       </div>
 
       <div className="mt-10 border-t border-base-300 pt-6 text-sm text-base-content/60">
         {data.sources.length > 0 && (
           <p className="mb-2">
-            <span className="font-semibold text-base-content/70">Sumber data analisis:</span>{" "}
+            <span className="font-semibold text-base-content/70">
+              Sumber data analisis:
+            </span>{" "}
             {data.sources.join(" · ")}
           </p>
         )}
         <p className="text-xs">
-          Disclaimer: Harga & ketersediaan produk dapat berubah sewaktu-waktu di masing-masing
-          marketplace. Rekomendasi AI bersifat membantu, keputusan akhir ada di tangan Anda.
+          Disclaimer: Harga & ketersediaan produk dapat berubah sewaktu-waktu di
+          masing-masing marketplace. Rekomendasi AI bersifat membantu, keputusan
+          akhir ada di tangan Anda.
         </p>
       </div>
 

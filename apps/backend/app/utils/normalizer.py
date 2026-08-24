@@ -10,6 +10,8 @@ Responsibilities:
 import hashlib
 import re
 
+from app.utils.url_generator import generate_product_link
+
 ALLOWED_MARKETPLACES = ["tokopedia", "shopee", "lazada", "blibli"]
 
 _DIGITS_RE = re.compile(r"\d+")
@@ -129,7 +131,7 @@ def normalize_serper_products(
                 "price_formatted": format_price(price),
                 "rating": rating,
                 "image_url": image_url,
-                "product_url": url,
+                "product_url": generate_product_link(marketplace, title),
             }
         )
 
