@@ -14,6 +14,7 @@ import asyncio
 import json
 import logging
 import re
+from datetime import date
 
 from app.config import settings
 from app.models.response import IntentResult, RankingResult
@@ -83,6 +84,22 @@ PENTING: Google Shopping mencocokkan berdasarkan judul listing produk, bukan kal
 
 Respond ONLY in this exact JSON format:
 { "optimized_query": "..." }"""
+
+CANDIDATES_SYSTEM = """Kamu adalah pakar produk elektronik untuk pasar Indonesia.
+Dari kebutuhan user, sebutkan 10-12 nama produk/model KONKRET (sebagian akan gugur karena tidak dijual di Indonesia/di luar budget, jadi berikan cadangan) yang paling cocok, berdasarkan
+pengetahuanmu soal spesifikasi, reputasi, dan kisaran harga pasar Indonesia.
+
+Rules:
+- Hanya model yang benar-benar ada & dijual resmi/umum di Indonesia. Jangan mengarang model.
+- Kalau user menyebut budget, pilih model yang harga pasarnya di bawah atau dekat budget itu.
+- Tulis dalam bentuk "Merek + Model" seperti muncul di judul listing toko online
+  (contoh: "iPhone 16 Pro", "Samsung Galaxy S24 Ultra"). Tanpa varian storage/warna, tanpa deskripsi.
+- Hari ini {today}. Utamakan model generasi terbaru yang masih dijual baru (rilis ~2 tahun
+  terakhir), bukan model lawas/discontinued.
+- Variasikan merek; urutkan dari yang paling cocok.
+
+Respond ONLY in this exact JSON format, no preamble:
+{ "candidates": ["Merek Model A", "Merek Model B"] }"""
 
 CLARIFY_SYSTEM = """User sedang mencari produk tapi querynya terlalu vague.
 Generate 1 clarifying question dalam Bahasa Indonesia yang akan
@@ -276,6 +293,20 @@ class LLMService:
         except Exception as exc:  # optimization is best-effort
             logger.warning("query optimization failed, using raw query: %s", exc)
             return query
+
+    async def generate_candidates(self, query: str) -> list[str]:
+        """Concrete product/model names matching the query, from the LLM's own knowledge.
+
+        Best-effort: any failure returns [] so the route falls back to raw-query search.
+        """
+        try:
+            system = CANDIDATES_SYSTEM.replace("{today}", date.today().isoformat())
+            data = await self._complete_json(system, f"Query: {query}", tier="reasoning")
+            names = [str(n).strip() for n in data.get("candidates", []) if str(n).strip()]
+            return list(dict.fromkeys(names))[: settings.MAX_CANDIDATES]
+        except Exception as exc:
+            logger.warning("candidate generation failed, falling back to raw search: %s", exc)
+            return []
 
     async def generate_clarifying(self, query: str) -> dict:
         return await self._complete_json(

@@ -2,6 +2,9 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  watchOptions: {
+    pollIntervalMs: 500,
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "**.tokopedia.com" },

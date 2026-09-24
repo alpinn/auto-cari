@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { Sparkles } from "lucide-react";
 import { addLatestSearch, cn } from "@/lib/utils";
 
-const MIN_QUERY_LEN = 5;
-const MAX_QUERY_LEN = 300;
+const MIN_QUERY_LEN = Number(process.env.NEXT_PUBLIC_MIN_QUERY_LEN) || 5;
+const MAX_QUERY_LEN = Number(process.env.NEXT_PUBLIC_MAX_QUERY_LEN) || 300;
 
 interface SearchBoxProps {
   initialValue?: string;

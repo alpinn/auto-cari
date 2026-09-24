@@ -7,8 +7,7 @@ translate that into an HTTP 400.
 
 import re
 
-MAX_QUERY_LEN = 300
-MIN_QUERY_LEN = 5
+from app.config import settings
 
 _HTML_TAG_RE = re.compile(r"<[^>]*>")
 _CONTROL_RE = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
@@ -35,11 +34,11 @@ def sanitize_query(query: str) -> str:
     cleaned = _CONTROL_RE.sub("", cleaned)
     cleaned = _WHITESPACE_RE.sub(" ", cleaned).strip()
 
-    if len(cleaned) < MIN_QUERY_LEN:
-        raise InvalidQueryError("Query terlalu pendek. Minimal 5 karakter.")
+    if len(cleaned) < settings.MIN_QUERY_LEN:
+        raise InvalidQueryError(f"Query terlalu pendek. Minimal {settings.MIN_QUERY_LEN} karakter.")
 
-    if len(cleaned) > MAX_QUERY_LEN:
-        cleaned = cleaned[:MAX_QUERY_LEN].strip()
+    if len(cleaned) > settings.MAX_QUERY_LEN:
+        cleaned = cleaned[: settings.MAX_QUERY_LEN].strip()
 
     if _SQLI_RE.search(cleaned):
         raise InvalidQueryError("Query mengandung pola yang tidak diizinkan.")

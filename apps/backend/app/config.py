@@ -56,6 +56,10 @@ class Settings(BaseSettings):
     # ----- Rate limiting -----
     MAX_QUERIES_PER_DAY: int = 10
 
+    # ----- Query validation -----
+    MIN_QUERY_LEN: int = 5
+    MAX_QUERY_LEN: int = 300
+
     # ----- Tunables -----
     HTTP_TIMEOUT_SECONDS: float = 8.0
     HTTP_MAX_ATTEMPTS: int = 3
@@ -63,7 +67,8 @@ class Settings(BaseSettings):
     PRODUCT_CACHE_TTL: int = 43200  # 12h
     CATEGORY_CACHE_TTL: int = 21600  # 6h
     TRENDING_TTL: int = 604800  # 7d
-    MAX_PRODUCTS_TO_LLM: int = 10
+    MAX_PRODUCTS_TO_LLM: int = 12
+    MAX_CANDIDATES: int = 12
 
     @property
     def cors_origins(self) -> list[str]:

@@ -147,7 +147,78 @@ def normalize_serper_products(
     return normalized[:cap]
 
 
+_TOKEN_RE = re.compile(r"[a-z0-9]+")
+_ACCESSORY_RE = re.compile(
+    r"\b(case|casing|softcase|cover|baterai|battery|charger|kabel|cable|tempered|"
+    r"anti ?gores|protector|lcd|sparepart|spare ?part|dummy|holder|stand|sleeve|skin|"
+    r"adesive|sticker|second|seken|bekas|refurbish\w*)\b",
+    re.IGNORECASE,
+)
+
+
+# Suffixes that make a *different* SKU ("S24" != "S24 FE", "X90 Pro" != "X90 Pro Plus").
+_VARIANT_TOKENS = {"fe", "plus", "max", "ultra", "pro", "mini", "lite", "se", "air", "neo"}
+
+
+def _has_phrase(tokens: list[str], phrase: list[str]) -> bool:
+    n = len(phrase)
+    for i in range(len(tokens) - n + 1):
+        if tokens[i : i + n] != phrase:
+            continue
+        nxt = tokens[i + n] if i + n < len(tokens) else None
+        if nxt in _VARIANT_TOKENS and nxt not in phrase:
+            continue
+        return True
+    return False
+
+
+def pick_candidate_listing(
+    candidate: str, normalized: list[dict], budget_max: int | None = None
+) -> dict | None:
+    """Best real listing for one LLM-proposed product name, or None to drop it.
+
+    Keeps listings whose title contains the candidate name as a contiguous phrase
+    ("Xiaomi 13 Pro" must not match "Xiaomi Note 13 Pro"), isn't an accessory/spare
+    part, and is within budget; discards price outliers (< half the median of the
+    matches, or < 30% of budget), then takes the cheapest survivor. No survivor = not sold in ID / over budget -> None.
+    """
+    tokens = _TOKEN_RE.findall(candidate.lower())
+    if not tokens:
+        return None
+    matches = [
+        p for p in normalized
+        if _has_phrase(_TOKEN_RE.findall(p["name"].lower()), tokens)
+        and not _ACCESSORY_RE.search(p["name"])
+    ]
+    if not matches:
+        return None
+    prices = sorted(p["price"] for p in matches)
+    # ponytail: median floor is a heuristic, swap for category-aware price bands if accessories leak through
+    floor = prices[len(prices) // 2] * 0.5
+    if budget_max:
+        floor = max(floor, budget_max * 0.3)  # a 45rb "Pixel 8 Pro" isn't a phone, whatever the median says
+    ok = [p for p in matches if p["price"] >= floor and (budget_max is None or p["price"] <= budget_max)]
+    return min(ok, key=lambda p: p["price"]) if ok else None
+
+
 def _demo() -> None:
+    items = [
+        {"name": "Case iPhone 16 Pro Clear", "price": 80_000},
+        {"name": "Apple iPhone 16 Pro 128GB", "price": 17_500_000},
+        {"name": "Apple iPhone 16 Pro 256GB", "price": 19_000_000},
+        {"name": "Apple iPhone 16 Pro Max", "price": 24_000_000},
+    ]
+    assert pick_candidate_listing("iPhone 16 Pro", items, 20_000_000)["price"] == 17_500_000
+    assert pick_candidate_listing("iPhone 16 Pro", items, 10_000_000) is None
+    assert pick_candidate_listing("Galaxy S24 Ultra", items, None) is None
+    assert pick_candidate_listing("Galaxy S24", [{"name": "Galaxy S24 FE 5G", "price": 9_000_000}], None) is None
+    assert pick_candidate_listing("iPhone 15", [{"name": "iPhone 15 SECOND", "price": 9_000_000}], None) is None
+    assert pick_candidate_listing("Pixel 8 Pro", [{"name": "Pixel 8 Pro", "price": 45_000}], 20_000_000) is None
+    note = [{"name": "Xiaomi Note 13 Pro 5G", "price": 2_750_000}]
+    assert pick_candidate_listing("Xiaomi 13 Pro", note, None) is None
+    batt = [{"name": "BATERAI GOOGLE PIXEL 8 PRO", "price": 215_000}]
+    assert pick_candidate_listing("Google Pixel 8 Pro", batt, None) is None
+
     assert extract_budget_max("smartphone untuk video dengan budget 20 juta") == 20_000_000
     assert extract_budget_max("hp dibawah 1.5jt") == 1_500_000
     assert extract_budget_max("earphone 500rb") == 500_000

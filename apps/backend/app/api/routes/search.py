@@ -1,7 +1,8 @@
 """POST /api/search — the core recommendation pipeline.
 
 Flow: sanitize -> rate limit -> cache -> intent -> (coming_soon/clarifying) ->
-optimize -> parallel Serper+Tavily -> normalize -> rank -> cache -> log -> return.
+LLM candidates -> per-candidate Serper (+ Tavily) -> pick real listings -> rank ->
+cache -> log -> return. No candidates/listings -> optimize -> raw-query Serper.
 """
 
 import asyncio
@@ -28,12 +29,18 @@ from app.services.llm_service import LLMError, llm_service
 from app.services.serper_service import serper_service
 from app.services.tavily_service import tavily_service
 from app.utils.http import ExternalServiceError
-from app.utils.normalizer import extract_budget_max, normalize_serper_products
+from app.utils.normalizer import (
+    extract_budget_max,
+    normalize_serper_products,
+    pick_candidate_listing,
+)
 from app.utils.rate_limiter import check_rate_limit
 from app.utils.sanitizer import InvalidQueryError, sanitize_query
 
 logger = logging.getLogger("autocari.search")
 router = APIRouter()
+
+CANDIDATE_SERPER_NUM = 10  # listings per candidate; we only need the cheapest sane one
 
 
 def _client_ip(request: Request) -> str:
@@ -120,31 +127,67 @@ async def search(req: SearchRequest, request: Request):
             _log_async(effective_query, "clarifying", False, started, 0, req.session_id)
             return JSONResponse(content=clarifying.model_dump())
 
-    # 5. Query optimization -------------------------------------------------
-    optimized = await llm_service.optimize_query(effective_query)
-
-    # 6. Parallel fetch: Serper (products) + Tavily (reviews) ---------------
-    serper_raw, tavily_raw = await asyncio.gather(
-        serper_service.search_shopping(optimized, num=40),
-        tavily_service.search_reviews(optimized, max_results=3),
-        return_exceptions=True,
-    )
-
-    if isinstance(serper_raw, Exception):
-        logger.error("serper failed: %s", serper_raw)
-        return _error("SEARCH_FAILED", "Terjadi gangguan sementara. Coba lagi dalam beberapa detik.", 503)
-
-    reviews: list[dict] = []
-    if isinstance(tavily_raw, Exception):
-        logger.warning("tavily failed (continuing without reviews): %s", tavily_raw)
-    else:
-        reviews = tavily_raw
-
-    # 7. Normalize ----------------------------------------------------------
     budget_max = extract_budget_max(effective_query)
-    normalized = normalize_serper_products(
-        serper_raw, cap=settings.MAX_PRODUCTS_TO_LLM, budget_max=budget_max
-    )
+
+    # 5. Candidate generation: LLM names concrete products; Serper only validates
+    #    price/availability per candidate (Shopping can't grasp "kamera terbaik").
+    candidates = await llm_service.generate_candidates(effective_query)
+    normalized: list[dict] = []
+    reviews: list[dict] = []
+    optimized = effective_query
+
+    if candidates:
+        logger.info("candidates: %s", candidates)
+        serper_results = await asyncio.gather(
+            *(serper_service.search_shopping(c, num=CANDIDATE_SERPER_NUM) for c in candidates),
+            return_exceptions=True,
+        )
+        picked: list[str] = []
+        for cand, raw in zip(candidates, serper_results):
+            if isinstance(raw, Exception):
+                logger.warning("serper failed for candidate %r: %s", cand, raw)
+                continue
+            pick = pick_candidate_listing(
+                cand, normalize_serper_products(raw, cap=CANDIDATE_SERPER_NUM), budget_max
+            )
+            if pick:
+                normalized.append(pick)
+                picked.append(cand)
+            else:
+                logger.info("candidate %r dropped (not found / over budget)", cand)
+
+        # Reviews per surviving product (a generic query returned off-topic articles).
+        # Only survivors, 1 article each: saves Tavily credits and the LLM's token budget.
+        review_results = await asyncio.gather(
+            *(tavily_service.search_reviews(c, max_results=1) for c in picked),
+            return_exceptions=True,
+        )
+        for cand, res in zip(picked, review_results):
+            if isinstance(res, Exception):
+                logger.warning("tavily failed for %r (continuing): %s", cand, res)
+                continue
+            reviews += [{**r, "title": f"[{cand}] {r['title']}"} for r in res]
+
+    normalized = normalized[: settings.MAX_PRODUCTS_TO_LLM]
+
+    # Fallback: candidate step failed or nothing survived -> old raw-query flow.
+    if not normalized:
+        optimized = await llm_service.optimize_query(effective_query)
+        serper_raw, tavily_raw = await asyncio.gather(
+            serper_service.search_shopping(optimized, num=40),
+            tavily_service.search_reviews(optimized, max_results=3),
+            return_exceptions=True,
+        )
+        if isinstance(serper_raw, Exception):
+            logger.error("serper failed: %s", serper_raw)
+            return _error("SEARCH_FAILED", "Terjadi gangguan sementara. Coba lagi dalam beberapa detik.", 503)
+        if isinstance(tavily_raw, Exception):
+            logger.warning("tavily failed (continuing without reviews): %s", tavily_raw)
+        else:
+            reviews = tavily_raw
+        normalized = normalize_serper_products(
+            serper_raw, cap=settings.MAX_PRODUCTS_TO_LLM, budget_max=budget_max
+        )
 
     # Google Shopping's live ranking is non-deterministic — the same query can
     # occasionally come back with zero results from our 4 tracked marketplaces

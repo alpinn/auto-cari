@@ -1,0 +1,77 @@
+{
+  "query": "smartphone kamera terbaik budget 20 juta",
+  "products": [
+    {
+      "index": 0,
+      "name": "SAMSUNG GALAXY S24 8/256GB SEIN RESMI ORIGINAL FULLSET",
+      "price": 9775000,
+      "marketplace": "lazada",
+      "store_name": "Lazada Indonesia",
+      "store_badge": null,
+      "rating": 4.9
+    },
+    {
+      "index": 1,
+      "name": "Apple iPhone 15 512GB Green",
+      "price": 18449000,
+      "marketplace": "blibli",
+      "store_name": "Blibli",
+      "store_badge": null,
+      "rating": null
+    },
+    {
+      "index": 2,
+      "name": "Oppo Find X6 Pro 5G 16GB 256GB Android 16 50MP Snapdragon 8 Gen2 100W Dessert Silver Brown",
+      "price": 9850000,
+      "marketplace": "shopee",
+      "store_name": "shopee.co.id",
+      "store_badge": null,
+      "rating": null
+    },
+    {
+      "index": 3,
+      "name": "Vivo X90 Pro - Black 12+512 GB",
+      "price": 18031000,
+      "marketplace": "tokopedia",
+      "store_name": "tokopedia.com",
+      "store_badge": null,
+      "rating": 5.0
+    },
+    {
+      "index": 4,
+      "name": "SONY XPERIA 1 V - MARK 5 - 256 RAM 12GB - ORIGINAL - Ex Japan",
+      "price": 15599000,
+      "marketplace": "tokopedia",
+      "store_name": "tokopedia.com",
+      "store_badge": null,
+      "rating": 3.8
+    }
+  ],
+  "reviews": [
+    {
+      "title": "[Samsung Galaxy S24] Samsung Galaxy S24 review",
+      "url": "https://www.youtube.com/watch?v=u9yv3RmqAm8",
+      "content": "# Samsung Galaxy S24 review\n## GSMArena Official\n2100000 subscribers\n8071 likes\n\n### Description\n972645 views\nPosted: 2 Feb 2024\nThe new Galaxy S24 introduces a refreshed, refined, even design, and fits an even larger display into the same footprint. Check out our video review to learn ALL YOU NEED TO KNOW about the phone's top features, build and screen quality, battery life, performance, and camera image quality. \n\n▶ Check price\n\nNote: Commissions may be earned from the link above [...] the s24 is ultra wide camera does seem to have an overall Improvement compared to the s23 is the photos are still noisy overall though night mode does improve things but similar to the telephoto the ultra white exhibits unreliable Auto white balance in night mode the Galaxy s24 is 12 megap selfie camera with autofocus is the same as in the previous generation again you get Top Class selfies with excellent detail low noise and overall nice looking colors the Galaxy s24 can record video in 4k at [...] P"
+    },
+    {
+      "title": "[Apple iPhone 15] Apple iPhone 15 review: Lab tests: display, battery life, charging speed, loudspeakers",
+      "url": "https://www.gsmarena.com/apple_iphone_15-review-2619p3.php",
+      "content": "The iPhone 15 has a gorgeous Super Retina XDR OLED display. Just like last year, the display is 6.1 inches in diameter with a 19.5:9 aspect ratio and, in typical iPhone fashion, a funky resolution of 1179 x 2556 pixels. That's just a bit higher than on last year's iPhone 14 and results in a screen-to-body ratio of around 86.4% and a pixel density of around 461 ppi. That looks perfectly sharp in person.\n\nApple iPhone 15 review [...] Expand to reveal our legacy battery test (Endurance rating). How we test now.\n\nThe iPhone 15 has a 3349 mAh battery. That's a bit bigger than last year's iPhone 14 Pro model and its 3200 mAh pack, as well as the vanilla iPhone 14 and its 3279 mAh. Apple has apparently done some extra optimization work on software and hardware since last year as well.\n\nApple iPhone 15 review [...] In our proprietary testing, the iPhone 15 managed a solid 98 hours of total endurance. That's notably better than last year's iPhone 14 Pro, which is what we should probably be comp"
+    },
+    {
+      "title": "[OPPO Find X6 Pro] Oppo Find X6 Pro review: Imposing flagship smartphone with improved Hasselblad cameras - Notebookcheck Review",
+      "url": "https://www.notebookcheck.net/Oppo-Find-X6-Pro-review-Imposing-flagship-smartphone-with-improved-Hasselblad-cameras.720549.0.html",
+      "content": "The Oppo Find X6 Pro has a 5,000 mAh battery that can be charged with a maximum of 100 watts via cable. When completely empty, the Oppo smartphone has to remain connected to the power cable for a little more than 30 minutes for a full charge. A sufficiently fast charger is fortunately included in the scope of delivery. Wireless charging via the Qi fast charging protocol is also supported with a maximum of 50 watts. This is further supplemented by 10-watt reverse wireless charging. [...] The Find X6 Pro has a 6.82-inch OLED display with a resolution of 3,168 x 1,440 and uses adaptive refresh rate control. The Chinese manufacturer's flagship smartphone can automatically adapt this to the displayed content and should regulate between 1 and 120 Hz. However, according to the system data readout, the Oppo flagship currently only uses a minimum of 5 Hz. [...] The Find X6 Pro's IP68-rated case is available with a tempered glass back in black and green as well as a brown-silver faux leather/gla"
+    },
+    {
+      "title": "[Vivo X90 Pro] vivo X90 Pro review: Design, build quality, handling",
+      "url": "https://www.gsmarena.com/vivo_x90_pro-review-2530p2.php",
+      "content": "The vivo X90 Pro measures 164.1 x 74.5 x 9.3 mm and weighs 215g, in line with most smartphones of its size, especially cameraphones. It doesn't wobble when used without a case because its camera housing is huge.\n\nvivo X90 Pro review [...] The vivo X90 Pro is available only with a vegan leather back panel, and the global model has only one color option - the Legendary Black we have here. There is also a Red version in existence, but it's exclusive to China.\n\nThe vivo X90 Pro reminds us of the Xiaomi 12S Ultra because of its signature camera housing, plus it uses the same 1\" camera sensor for the main camera. The Zeiss logo on the vivo is an easy tell, though, as Xiaomi has partnered with Leica for its most current flagships. [...] The left side of the vivo X90 Pro has no controls, while the right one accommodates the volume and power/lock keys.\n\nvivo X90 Pro review\n\nThe back of the X90 Pro is quite busy. The round camera housing is huge and thick, and it envelops the 50MP primary, the 5"
+    },
+    {
+      "title": "[Sony Xperia 1 V] Sony Xperia 1 V review - GSMArena.com tests",
+      "url": "https://www.gsmarena.com/sony_xperia_1_v-review-2567.php",
+      "content": "The Sony Xperia 1 V is an incremental upgrade over the Xperia 1 IV, but given how good that one was, there is no surprise. Still, the 1 V brings the latest Snapdragon 8 Gen 2, now with a better cooling system and a promise for less throttling and no overheating. There is an improved primary camera with a multi-aspect 52MP sensor, plus, drum rolls, Night mode is now available! [...] The design has been thoughtfully improved, and you are looking at the only non-rugged smartphone that deserves a Perfect mark for grip. The Xperia 1 V has two Gorilla Glass Victus panels, and the rear one is matte with a dotted pattern for extra grip. The metal frame is all ridged, too, and this is how a premium phone can provide an outstanding grip experience without giving up on looks."
+    }
+  ]
+}
